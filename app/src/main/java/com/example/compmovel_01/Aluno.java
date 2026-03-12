@@ -9,6 +9,7 @@ public class Aluno implements Serializable {
     private String telefone;
     private String endereco;
     private String curso;
+    private byte[] fotoBytes;
 
     @Override
     public String toString() {return nome;}
@@ -24,4 +25,6 @@ public class Aluno implements Serializable {
     public void setEndereco(String endereco) {this.endereco = endereco;}
     public String getCurso() {return curso;}
     public void setCurso(String curso) {this.curso = curso;}
+    public byte[] getFotoBytes() { return fotoBytes; }
+    public void setFotoBytes(byte[] fotoBytes) { this.fotoBytes = fotoBytes; }
 }

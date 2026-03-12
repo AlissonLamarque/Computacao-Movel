@@ -24,13 +24,14 @@ public class AlunoDao {
         values.put("telefone", aluno.getTelefone());
         values.put("endereco", aluno.getEndereco());
         values.put("curso", aluno.getCurso());
+        values.put("fotoBytes", aluno.getFotoBytes());
         return banco.insert("aluno", null, values);
     }
 
     public List<Aluno> obterTodos(){
         List<Aluno> alunos = new ArrayList<>();
-        Cursor cursor = banco.query("aluno", new String[]{"id", "nome", "cpf", "telefone", "endereco", "curso"},
-                null, null, null, null, null);
+        Cursor cursor = banco.query("aluno", new String[]{"id", "nome", "cpf", "telefone", "endereco", "curso", "fotoBytes"},
+                null, null, null, null, null, null);
         while (cursor.moveToNext()){
             Aluno a = new Aluno();
             a.setId(cursor.getInt(0));
@@ -39,6 +40,7 @@ public class AlunoDao {
             a.setTelefone(cursor.getString(3));
             a.setEndereco(cursor.getString(4));
             a.setCurso(cursor.getString(5));
+            a.setFotoBytes(cursor.getBlob(6));
             alunos.add(a);
         }
         return alunos;
@@ -55,6 +57,7 @@ public class AlunoDao {
         values.put("telefone", aluno.getTelefone());
         values.put("endereco", aluno.getEndereco());
         values.put("curso", aluno.getCurso());
+        values.put("fotoBytes", aluno.getFotoBytes());
         banco.update("aluno", values, "id = ?", new String[]{aluno.getId().toString()});
     }
 }
