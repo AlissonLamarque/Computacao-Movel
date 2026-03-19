@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import androidx.activity.EdgeToEdge;
@@ -24,7 +25,8 @@ import java.util.List;
 
 public class TelaListagem extends AppCompatActivity {
     private ListView listView;
-    private AlunoDao dao;
+    AlunoDaoRoom daoRoom;
+    private EditText editPesquisa;
     private List<Aluno> alunos;
     private List<Aluno> alunosFiltrados = new ArrayList<>();
 
@@ -33,12 +35,13 @@ public class TelaListagem extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tela_listagem);
+        editPesquisa = findViewById(R.id.editTextPesquisar);
+        daoRoom = AppDatabase.getInstance(this).alunoDaoRoom();
 
         listView = findViewById(R.id.lista_alunos);
         registerForContextMenu(listView);
 
-        dao = new AlunoDao(this);
-        alunos = dao.obterTodos();
+        alunos = daoRoom.obterTodos();
         alunosFiltrados.addAll(alunos);
 
         ArrayAdapter<Aluno> adaptador = new ArrayAdapter<Aluno>(this, android.R.layout.simple_list_item_1, alunos);
@@ -69,7 +72,7 @@ public class TelaListagem extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         alunosFiltrados.remove(alunoExcluir);
                         alunos.remove(alunoExcluir);
-                        dao.excluir(alunoExcluir);
+                        daoRoom.excluir(alunoExcluir);
                         listView.invalidateViews();
                     }
                 } ).create();
@@ -87,10 +90,30 @@ public class TelaListagem extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        alunos = dao.obterTodos();
+        alunosFiltrados = daoRoom.obterTodos();
         alunosFiltrados.clear();
         alunosFiltrados.addAll(alunos);
         ArrayAdapter<Aluno> adaptador = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, alunosFiltrados);
+        listView.setAdapter(adaptador);
+    }
+
+    public void pesquisarAluno(View view){
+        String nome = editPesquisa.getText().toString();
+
+        alunosFiltrados.clear();
+
+        if(nome.isEmpty()){
+            alunosFiltrados.addAll(daoRoom.obterTodos());
+        } else {
+            alunosFiltrados.addAll(daoRoom.buscarPorNome(nome + "%"));
+        }
+
+        ArrayAdapter<Aluno> adaptador = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_list_item_1,
+                alunosFiltrados
+        );
+
         listView.setAdapter(adaptador);
     }
 }

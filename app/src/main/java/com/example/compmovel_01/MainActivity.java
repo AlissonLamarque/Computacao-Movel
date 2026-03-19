@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText telefone;
     private EditText endereco;
     private EditText curso;
-    private AlunoDao dao;
+    private AlunoDaoRoom alunoDaoRoom;
     private Aluno aluno = null;
     private ImageView imageView;
     private static final int CAMERA_PERMISSION_CODE = 100;
@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
         imageView = findViewById(R.id.imageView);
         Button buttonFoto = findViewById(R.id.buttonFoto);
 
-        dao = new AlunoDao(this);
+        alunoDaoRoom = AppDatabase.getInstance(this).alunoDaoRoom();
 
         Intent it = getIntent(); //pega intenção
         if (it.hasExtra("aluno")) {
@@ -77,13 +77,19 @@ public class MainActivity extends AppCompatActivity {
             a.setTelefone(telefone.getText().toString());
             a.setEndereco(endereco.getText().toString());
             a.setCurso(curso.getText().toString());
-            long id = dao.inserir(a);
+            if (aluno != null && aluno.getFotoBytes() != null) {
+                a.setFotoBytes(aluno.getFotoBytes());
+            }
+            long id = alunoDaoRoom.inserir(a);
             Toast.makeText(this, "Aluno inserido com id: " + id, Toast.LENGTH_SHORT).show();
         } else {
             aluno.setNome(nome.getText().toString());
             aluno.setCpf(cpf.getText().toString());
             aluno.setTelefone(telefone.getText().toString());
-            dao.atualizar(aluno);
+            if (aluno != null && aluno.getFotoBytes() != null) {
+                aluno.setFotoBytes(aluno.getFotoBytes());
+            }
+            alunoDaoRoom.atualizar(aluno);
             Toast.makeText(this, "Aluno Atualizado!! com id: ", Toast.LENGTH_SHORT).show();
         }
     }

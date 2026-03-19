@@ -1,8 +1,13 @@
 package com.example.compmovel_01;
 
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
 import java.io.Serializable;
 
+@Entity(tableName = "aluno")
 public class Aluno implements Serializable {
+    @PrimaryKey(autoGenerate = true)
     private Integer id;
     private String nome;
     private String cpf;
