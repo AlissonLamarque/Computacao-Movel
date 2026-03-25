@@ -1,155 +1,80 @@
 package com.example.compmovel_01;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-
-import java.io.ByteArrayOutputStream;
 
 public class MainActivity extends AppCompatActivity {
-    private EditText nome;
-    private EditText cpf;
-    private EditText telefone;
-    private EditText endereco;
-    private EditText curso;
-    private AlunoDaoRoom alunoDaoRoom;
-    private Aluno aluno = null;
-    private ImageView imageView;
-    private static final int CAMERA_PERMISSION_CODE = 100;
-    private static final int REQUEST_IMAGE_CAPTURE = 200;
-    private static final int REQUEST_CEP = 300;
+    private EditText editNomePeca;
+    private EditText editPreco;
+    private EditText editNomeOficina;
+
+    private PecaDaoRoom pecaDaoRoom;
+    private Peca peca = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        nome = findViewById(R.id.editNome);
-        cpf = findViewById(R.id.editCpf);
-        telefone = findViewById(R.id.editTelefone);
-        endereco = findViewById(R.id.editEndereco);
-        curso = findViewById(R.id.editCurso);
-        imageView = findViewById(R.id.imageView);
-        Button buttonFoto = findViewById(R.id.buttonFoto);
+        editNomePeca = findViewById(R.id.editNomePeca);
+        editPreco = findViewById(R.id.editPreco);
+        editNomeOficina = findViewById(R.id.editNomeOficina);
 
-        alunoDaoRoom = AppDatabase.getInstance(this).alunoDaoRoom();
+        pecaDaoRoom = AppDatabase.getInstance(this).pecaDaoRoom();
 
-        Intent it = getIntent(); //pega intenção
-        if (it.hasExtra("aluno")) {
-            aluno = (Aluno) it.getSerializableExtra("aluno");
-            nome.setText(aluno.getNome().toString());
-            cpf.setText(aluno.getCpf());
-            telefone.setText(aluno.getTelefone());
-            endereco.setText(aluno.getEndereco());
-            curso.setText(aluno.getCurso());
-
-            byte[] fotoBytes = aluno.getFotoBytes();
-            if (fotoBytes != null && fotoBytes.length > 0) {
-                Bitmap bitmap = BitmapFactory.decodeByteArray(fotoBytes, 0, fotoBytes.length);
-                imageView.setImageBitmap(bitmap);
-            }
+        Intent it = getIntent();
+        if (it.hasExtra("peca")) {
+            peca = (Peca) it.getSerializableExtra("peca");
+            editNomePeca.setText(peca.getNomePeca());
+            editPreco.setText(peca.getPreco().toString());
+            editNomeOficina.setText(peca.getNomeOficina());
         }
     }
 
     public void salvar(View view) {
-        if (aluno == null || aluno.getId() == null) {
-            Aluno a = new Aluno();
-            a.setNome(nome.getText().toString());
-            a.setCpf(cpf.getText().toString());
-            a.setTelefone(telefone.getText().toString());
-            a.setEndereco(endereco.getText().toString());
-            a.setCurso(curso.getText().toString());
-            if (aluno != null && aluno.getFotoBytes() != null) {
-                a.setFotoBytes(aluno.getFotoBytes());
-            }
-            long id = alunoDaoRoom.inserir(a);
-            Toast.makeText(this, "Aluno inserido com id: " + id, Toast.LENGTH_SHORT).show();
-        } else {
-            aluno.setNome(nome.getText().toString());
-            aluno.setCpf(cpf.getText().toString());
-            aluno.setTelefone(telefone.getText().toString());
-            if (aluno != null && aluno.getFotoBytes() != null) {
-                aluno.setFotoBytes(aluno.getFotoBytes());
-            }
-            alunoDaoRoom.atualizar(aluno);
-            Toast.makeText(this, "Aluno Atualizado!! com id: ", Toast.LENGTH_SHORT).show();
+        if (editNomePeca.getText().toString().isEmpty() || editPreco.getText().toString().isEmpty()) {
+            Toast.makeText(this, "Preencha o nome e o preço!", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        try {
+            if (peca == null) {
+                Peca p = new Peca();
+                p.setNomePeca(editNomePeca.getText().toString());
+                p.setPreco(Double.parseDouble(editPreco.getText().toString()));
+                p.setNomeOficina(editNomeOficina.getText().toString());
+
+                long id = pecaDaoRoom.inserir(p);
+                Toast.makeText(this, "Peça inserida com ID: " + id, Toast.LENGTH_SHORT).show();
+            } else {
+                peca.setNomePeca(editNomePeca.getText().toString());
+                peca.setPreco(Double.parseDouble(editPreco.getText().toString()));
+                peca.setNomeOficina(editNomeOficina.getText().toString());
+
+                pecaDaoRoom.atualizar(peca);
+                Toast.makeText(this, "Peça Atualizada", Toast.LENGTH_SHORT).show();
+            }
+            limparCampos();
+
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Preço inválido", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void limparCampos() {
+        editNomePeca.setText("");
+        editPreco.setText("");
+        editNomeOficina.setText("");
+        peca = null;
     }
 
     public void irParaListar(View view) {
         Intent intent = new Intent(this, TelaListagem.class);
         startActivity(intent);
-    }
-
-    public void tirarFoto(View view) {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_CODE);
-        } else {
-            startCamera();
-        }
-    }
-
-    public void abrirBuscaCep(View view) {
-        Intent intent = new Intent(this, BuscarCepActivity.class);
-        startActivityForResult(intent, REQUEST_CEP);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == CAMERA_PERMISSION_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d("CAMERA_DEBUG", "Usuário permitiu, abrindo câmera...");
-                startCamera();
-            } else {
-                Toast.makeText(this, "A permissão é necessária para usar a câmera.", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    private void startCamera() {
-        try {
-            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-        } catch (Exception e) {
-            Log.e("CAMERA_DEBUG", "Erro ao abrir a câmera: " + e.getMessage());
-            Toast.makeText(this, "Erro ao abrir a câmera no seu dispositivo.", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            imageView.setImageBitmap(imageBitmap);
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            byte[] byteArray = stream.toByteArray();
-            if (aluno == null){
-                aluno = new Aluno();
-            }
-            aluno.setFotoBytes(byteArray);
-        }
     }
 }
