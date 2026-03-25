@@ -36,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imageView;
     private static final int CAMERA_PERMISSION_CODE = 100;
     private static final int REQUEST_IMAGE_CAPTURE = 200;
+    private static final int REQUEST_CEP = 300;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +106,11 @@ public class MainActivity extends AppCompatActivity {
         } else {
             startCamera();
         }
+    }
+
+    public void abrirBuscaCep(View view) {
+        Intent intent = new Intent(this, BuscarCepActivity.class);
+        startActivityForResult(intent, REQUEST_CEP);
     }
 
     @Override
